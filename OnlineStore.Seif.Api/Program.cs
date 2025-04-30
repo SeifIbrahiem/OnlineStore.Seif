@@ -51,6 +51,8 @@ namespace OnlineStore.Seif.Api
                 app.UseSwaggerUI();
             }
 
+            app.UseStaticFiles();
+
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
