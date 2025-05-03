@@ -1,11 +1,15 @@
 
 using Domain.Contracts;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OnlineStore.Seif.Api.Extensions;
+using OnlineStore.Seif.Api.Middlewares;
 using Persistence;
 using Persistence.Data;
 using Services;
 using Services.Abstractions;
-using AssemblyMapping = Services.AssemblyReference;
+using Shared.ErrorsModels;
+
 namespace OnlineStore.Seif.Api
 {
     public class Program
@@ -15,50 +19,13 @@ namespace OnlineStore.Seif.Api
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-            builder.Services.AddDbContext<StoreDbContext>(options =>
-            {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-            });
-
-            builder.Services.AddScoped<IDbInitializer, DbInitializer>(); //Allow Di For DbInitialize
-
-            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-            builder.Services.AddAutoMapper(typeof(AssemblyMapping).Assembly);
-
-            builder.Services.AddScoped<IServiceManager,ServicesManager>();
+            builder.Services.RegisterAllServices(builder.Configuration);
 
             var app = builder.Build();
 
-
-            #region Seeding
-            using var scope = app.Services.CreateScope();
-            var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbInitializer>(); //ASk ClR from  DbInitializer 
-            await dbInitializer.InitializaAsync();
-            #endregion
-
-
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
 
-            app.UseStaticFiles();
-
-            app.UseHttpsRedirection();
-
-            app.UseAuthorization();
-
-
-            app.MapControllers();
+            await app.ConfigureMiddlewares();
 
             app.Run();
         }
